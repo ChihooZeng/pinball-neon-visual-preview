@@ -1,0 +1,7 @@
+{
+  "sourceBranch": "codex/v1-visual-fidelity-a1-1-20261120",
+  "sourceCommit": "063ddcf7bc287976f5db3789e9a3fe24e1f69482",
+  "entry": "demo/v1/",
+  "screens": "screens/",
+  "basedOn": "4f2498ccbe432b84dbcbf4c18109f3056217e470"
+}

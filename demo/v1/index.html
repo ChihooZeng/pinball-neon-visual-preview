@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+  <meta name="theme-color" content="#08182f"/>
+  <link rel="icon" type="image/png" href="./assets/icon-192.png"/>
+  <link rel="apple-touch-icon" href="./assets/icon-192.png"/>
+  <meta name="description" content="弹珠超载 · Marble Overload. Aim, build your cannon, and clear 20 waves in a neon arcade browser game."/>
+  <title>弹珠超载</title>
+  <link rel="stylesheet" href="./style.css?v=neon-a1-1"/>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div class="combat-summary">
+        <span id="waveLabel"></span><span id="xpLabel"></span>
+        <div class="progress-track" aria-hidden="true"><span id="xpFill"></span></div>
+      </div>
+      <div class="charge-pill">
+        <span id="energyFill" aria-hidden="true"></span>
+        <span class="ui-icon" aria-hidden="true"></span><span id="chargeText"></span>
+      </div>
+      <button id="pause" class="icon-btn" data-i18n-label="settings" aria-label="设置与暂停" type="button"><span class="ui-icon" aria-hidden="true"></span></button>
+    </header>
+    <section class="arena">
+      <canvas id="game" width="360" height="560" data-i18n-label="canvas"></canvas>
+      <div id="finalRushLabel" class="floating-label" role="status"></div>
+      <div class="boss-hud hidden" id="bossHud">
+        <div><span id="bossName"></span><strong id="bossText"></strong></div>
+        <div class="boss-track"><div id="bossFill"></div></div>
+      </div>
+      <div class="ult-wrap">
+        <div id="skillGuide" class="skill-guide hidden" role="status" data-i18n="manualGuide"></div>
+        <button id="giant" type="button" disabled></button>
+      </div>
+      <div class="overlay" id="startOverlay" role="dialog" aria-labelledby="startTitle">
+        <div class="home-decor" aria-hidden="true">
+          <span></span><span></span><span></span><span></span><span></span><span></span>
+          <span></span><span></span><span></span><span></span><span></span><span></span>
+        </div>
+        <div class="home-brand">
+          <img class="orbit" src="./assets/neon/brand/orbit-trail.svg" alt="" width="380" height="172"/>
+          <h1 id="startTitle" data-i18n="title">弹珠超载</h1>
+          <span class="brand-subtitle" aria-hidden="true">PINBALL OVERLOAD</span>
+        </div>
+        <small id="loading" role="status" data-i18n="loading">正在载入游戏… / Loading game…</small>
+        <button class="cta" id="start" type="button" disabled data-i18n="play">开始挑战</button>
+        <details class="controls home-shortcut"><summary data-i18n="howToPlay">操作说明</summary><p data-i18n="controls"></p></details>
+        <details class="controls home-shortcut" id="runRecords" hidden><summary data-i18n="records"></summary><ul id="bestRuns"></ul></details>
+        <small class="label" data-i18n="version">V1.0 · 20 波挑战</small>
+        <p data-i18n="intro"></p>
+        <div class="start-options">
+          <label><span data-i18n="language">语言</span>
+            <select data-language><option value="zh-CN">简体中文</option><option value="en">English</option></select>
+          </label>
+          <a href="./privacy.html" data-i18n="privacy">隐私</a>
+        </div>
+        <div class="analytics-option" data-analytics-option hidden>
+            <label><input type="checkbox" data-analytics-consent><span data-i18n="analytics"></span></label>
+            <p data-i18n="analyticsHelp"></p>
+          </div>
+        <div class="boss-preview" id="qaBossPreview" hidden>
+          <label for="bossRoute" data-i18n="qaLabel"></label>
+          <select id="bossRoute" data-i18n-label="qaBuild">
+            <option value="split" data-i18n="skill.split"></option>
+            <option value="arc" data-i18n="skill.arc"></option>
+            <option value="gun" data-i18n="skill.gun"></option>
+          </select>
+          <button id="jumpBoss" type="button" data-i18n="qaBoss"></button>
+          <button id="jumpFinalBoss" class="final-boss-jump" type="button" data-i18n="qaFinal"></button>
+          <small data-i18n="qaNote"></small>
+        </div>
+      </div>
+      <div class="overlay hidden" id="choiceOverlay" role="dialog" aria-modal="true" aria-labelledby="choiceTitle">
+        <small id="choiceWave" class="label"></small>
+        <h2 id="choiceTitle" data-i18n="selectUpgrade"></h2>
+        <div id="upgradeOptions" class="upgrade-options">
+          <button id="choice0" class="upgrade-card" type="button">
+            <span class="upgrade-icon" aria-hidden="true"><span class="ui-icon"></span></span>
+            <span class="upgrade-copy"><b id="choiceTitle0"></b><span id="choiceDesc0"></span></span>
+          </button>
+          <button id="choice1" class="upgrade-card" type="button">
+            <span class="upgrade-icon" aria-hidden="true"><span class="ui-icon"></span></span>
+            <span class="upgrade-copy"><b id="choiceTitle1"></b><span id="choiceDesc1"></span></span>
+          </button>
+          <button id="choice2" class="upgrade-card" type="button">
+            <span class="upgrade-icon" aria-hidden="true"><span class="ui-icon"></span></span>
+            <span class="upgrade-copy"><b id="choiceTitle2"></b><span id="choiceDesc2"></span></span>
+          </button>
+        </div>
+        <small class="overlay-tip" data-i18n="upgradeTip"></small>
+      </div>
+      <div class="overlay hidden" id="pauseOverlay" role="dialog" aria-modal="true" aria-labelledby="pauseTitle">
+        <div class="pause-heading">
+          <div><h2 id="pauseTitle" data-i18n="settingsTitle"></h2><p id="pauseSubtitle"></p></div>
+          <button id="resume" class="cta" type="button" data-i18n="resume"></button>
+        </div>
+        <div class="pause-scroll" tabindex="0">
+          <label><span data-i18n="language"></span>
+            <select data-language><option value="zh-CN">简体中文</option><option value="en">English</option></select>
+          </label>
+          <h3 data-i18n="hand"></h3>
+          <label><span data-i18n="skillSide"></span>
+            <select id="skillSide" data-i18n-label="skillSide">
+              <option value="right" data-i18n="right"></option><option value="left" data-i18n="left"></option>
+            </select>
+          </label>
+          <label class="auto-skill-label"><input type="checkbox" id="autoSkill"/><span data-i18n="autoSkill"></span></label>
+          <h3 data-i18n="soundVisual"></h3>
+          <div class="sound-controls">
+            <span id="soundValue">78%</span>
+            <input id="soundVolume" type="range" min="0" max="100" value="78" data-i18n-label="volume">
+            <button id="soundTest" class="icon-btn" data-i18n-label="previewSound" type="button">♪</button>
+          </div>
+          <label class="auto-skill-label"><input type="checkbox" id="mute"/><span data-i18n="mute"></span></label>
+          <a class="bgm-credit" data-i18n="credit" href="https://creativecommons.org/licenses/by/4.0/"></a>
+          <label><span data-i18n="impact"></span>
+            <select id="impactMode" data-i18n-label="impact">
+              <option value="bold" data-i18n="bold"></option>
+              <option value="balanced" data-i18n="balanced"></option>
+              <option value="off" data-i18n="off"></option>
+            </select>
+          </label>
+          <label class="auto-skill-label"><input type="checkbox" id="impactHaptic" checked/><span data-i18n="haptic"></span></label>
+          <details class="controls"><summary data-i18n="howToPlay"></summary><p data-i18n="controls"></p></details>
+          <a href="./privacy.html" data-i18n="privacy"></a>
+          <div class="analytics-option" data-analytics-option hidden>
+            <label><input type="checkbox" data-analytics-consent><span data-i18n="analytics"></span></label>
+            <p data-i18n="analyticsHelp"></p>
+          </div>
+          <button id="reset" class="export-btn" type="button" data-i18n="reset"></button>
+          <h3 data-i18n="cannonStats"></h3><p id="buildStats"></p>
+          <h3 data-i18n="skills"></h3><p id="buildSkills"></p>
+          <h3 data-i18n="buffs"></h3><p id="buildBuffs"></p>
+          <h3 data-i18n="recentUpgrade"></h3><p id="lastUpgrade"></p>
+          <details><summary data-i18n="history"></summary><p id="buildHistory"></p></details>
+          <div id="diagnostics" hidden>
+            <p id="fpsStat">FPS --</p>
+            <button id="exportRun" class="export-btn" type="button" data-i18n="export"></button>
+          </div>
+        </div>
+      </div>
+      <div class="overlay hidden" id="winOverlay" role="dialog" aria-modal="true" aria-labelledby="winTitle">
+        <div class="result-icon" aria-hidden="true"><span class="ui-icon"></span></div>
+        <small class="label" id="winLabel"></small>
+        <h2 id="winTitle"></h2>
+        <p id="finalStats"></p>
+        <button class="cta" id="again" type="button" data-i18n="again"></button>
+        <button class="secondary" id="home" type="button" data-i18n="home"></button>
+      </div>
+      <div class="overlay hidden" id="errorOverlay" role="alert">
+        <p data-i18n="fault">游戏运行中断。请刷新页面。 / Game interrupted. Please reload.</p>
+        <button class="cta" id="recover" type="button" hidden data-i18n="recover">回到首页</button>
+        <button class="cta" id="reload" type="button" data-i18n="reload">刷新 / Reload</button>
+      </div>
+    </section>
+    <div class="combat-status"><span id="buffStatus"></span><span id="stateText"></span></div>
+    <div class="legacy-hidden" aria-hidden="true"><span id="wave"></span><span id="score"></span><span id="rate"></span><span id="balls"></span><span id="buildText"></span><span id="loadoutLabel"></span>
+      <div id="giantLife" class="hidden"><span id="giantTimeText"></span><div id="giantTimeFill"></div></div>
+      <div id="previewBox" class="hidden"><select id="previewStage"><option value="finale"></option></select><button id="previewFinale"></button></div>
+      <div id="pickHunter"></div><div id="pickBounce"></div><div id="pickSplit"></div><div id="pickChain"></div><div id="pickPierce"></div><div id="pickArc"></div>
+      <div id="hunterDetails"></div><div id="bounceDetails"></div><div id="splitDetails"></div><div id="chainDetails"></div><div id="pierceDetails"></div><div id="arcDetails"></div>
+    </div>
+  </main>
+  <noscript>请启用 JavaScript 后刷新。 / Enable JavaScript and reload to play.</noscript>
+  <script src="./boot.js?v=1.0.0-rc.1" defer></script>
+  <script src="./i18n.js?v=1.0.0-rc.1" defer></script>
+  <script data-optional src="./runtime.js?v=1.0.0-rc.1" defer></script>
+  <script data-optional src="./analytics.js?v=1.0.0-rc.1" defer></script>
+  <script data-optional src="./ad-bridge.js?v=1.0.0-rc.1" defer></script>
+  <script src="./juice-fx.js?v=1.0.0-rc.1" defer></script>
+  <script src="./builds.js?v=1.0.0-rc.1" defer></script>
+  <script data-optional src="./sound-pack.js?v=1.0.0-rc.1" defer></script>
+  <script src="./game.js?v=neon-a1-1" defer></script>
+</body>
+</html>
